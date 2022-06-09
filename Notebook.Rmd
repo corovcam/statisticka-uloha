@@ -1,0 +1,154 @@
+# Štatistická úloha
+
+## Načítanie dát
+
+```{r}
+library(readr)
+data <- read_csv("insurance_modified.csv", 
+                 col_types = cols(age = col_integer(), 
+                                  sex = col_integer(),
+                                  children = col_integer(), 
+                                  smoker = col_logical()
+                                  ))
+head(data)
+```
+
+## Vizualizácia dát
+
+```{r}
+par(mfrow = c(1, 4))
+hist(data$age, main = "Vek")
+hist(data$bmi, main = "BMI")
+hist(data$charges, main = "Výdavky")
+plot(factor(data$smoker), main = "Fajčiary", xlab = "NE-Fajčiar (FALSE-TRUE)",
+     ylab = "Frequency")
+```
+
+## Testovanie závislostí
+
+Vytvoríme si korelačný graf využitím externej knižnice "psych". V grafe si 
+vyznačíme korelačné koeficienty využitím Pearsonej metódy, zobrazíme histogramy 
+a funkciu hustoty jednotlivých sĺpcov.
+
+```{r message=FALSE, warning=FALSE}
+# install.packages("psych")
+library(psych)
+
+pairs.panels(data[-6],
+             smooth = TRUE,      # If TRUE, draws loess smooths
+             scale = FALSE,      # If TRUE, scales the correlation text font
+             density = TRUE,     # If TRUE, adds density plots and histograms
+             ellipses = TRUE,    # If TRUE, draws ellipses
+             method = "pearson", # Correlation method (also "spearman" or "kendall")
+             pch = 21,           # pch symbol
+             cor = TRUE,         # If TRUE, reports correlations
+             jiggle = FALSE,     # If TRUE, data points are jittered
+             factor = 2,         # Jittering factor
+             hist.col = 4,       # Histograms color
+             stars = TRUE,       # If TRUE, adds significance level with stars
+             ci = TRUE)          # If TRUE, adds confidence intervals
+```
+
+Budeme testovať potencionálnu koreláciu medzi najpravdepodobnejšími dvojicami 
+hodnôt pomocou lineárnej regresie. Využijeme na to vstavanú funckiu lm().
+
+### Hypotéza 1: Korelácia medzi Vekom a BMI
+
+```{r}
+age_bmi_lm = lm(age~bmi, data)
+plot(data$age, data$bmi, pch = 16, col = "blue", xlab = "Vek", ylab = "BMI")
+abline(age_bmi_lm, col = "red")
+```
+
+```{r}
+summary(age_bmi_lm)
+paste("Korelačný index: r =", cor(data$age, data$bmi))
+```
+
+Korelačný index je r=0.11 čo je menej ako 0.2, čo znamená že medzi Vekom a BMI 
+je veľmi slabá až žiadna korelácia.
+
+### Hypotéza 2: Korelácia medzi BMI a Výdavkami
+
+```{r}
+bmi_charges_lm = lm(bmi~charges, data)
+plot(data$bmi, data$charges, pch = 16, col = "blue", xlab = "BMI", 
+     ylab = "Výdavky")
+abline(bmi_charges_lm, col = "red")
+```
+
+```{r}
+summary(bmi_charges_lm)
+paste("Korelačný index: r =", cor(data$bmi, data$charges))
+```
+
+Vo výsledku je trochu silnejšia korelácia oproti predošlému vzťahu ale stále 
+nízka.
+
+### Hypotéza 3: Korelácia medzi Vekom a Výdavkami
+
+```{r}
+age_charges_lm = lm(age~charges, data)
+plot(data$age, data$charges, pch = 16, col = "blue", xlab = "Vek", 
+     ylab = "Výdavky")
+abline(age_charges_lm, col = "red")
+```
+
+```{r}
+summary(age_charges_lm)
+paste("Korelačný index: r =", cor(data$age, data$charges))
+```
+
+Môžeme vidieť že síce korelačný index (r=0.29) je pomerne malý (slabá korelace), 
+ale p-hodnota je \< 2.2e-16, čiže pod 0.1% hladinou významnosti. Našu hypotézu 
+teda môžeme zamietnuť a tvrdiť že medzi Vekom a Výdavkami je lineárny vzťah. 
+Taktiež spomedzi všetkých predošlých nameraných r-koeficientov je tento 
+najvyšší, a teda vzťah Vek\~Výdavky je z predošlých vzťahov lineárne najbližší.
+
+### Hypotéza 4: Vzťah medzi skupinami Výdavkov Fajčiarov a Nefajčiariov
+
+Podľa Korelačného grafu na začiatku, by korelačný index medzi Ne/Fajčiarmi a
+Výdavkami mal byť r=0.79. Poďme teda skúmať túto závislosť.
+
+```{r}
+par(mfrow = c(1, 2))
+smoker_charges_lm = lm(smoker~charges, data)
+plot(factor(data$smoker), data$charges, pch = 16, col = "blue", xlab = "Fajčiar", 
+     ylab = "Výdavky")
+abline(smoker_charges_lm, col = "red")
+
+groups = split(data$charges, data$smoker)
+hist(groups$'TRUE', col = "blue", xlab = "Výdavky", 
+     main = "Histogram Výdavkov ne/fajčiarov", xlim = c(0, 60000), 
+     ylim = c(0, 350))
+par(new = TRUE)
+light_color <- rgb(255, 102, 102, max = 255, alpha = 125, names = "lightred50")
+hist(groups$'FALSE', col = light_color, main = "", axes = FALSE, xlab = "", 
+     ylab = "", xlim = c(0, 60000), ylim = c(0, 350))
+text(30000, 175, paste("Nefajčiary (počet =", length(groups$'FALSE'), ")"), 
+     col = "red", pos = 3)
+text(30000, 175, paste("Fajčiary (počet = ", length(groups$'TRUE'), ")"), 
+     col = "blue", pos = 1)
+```
+
+## Intervalové odhady
+
+Z histogramu BMI hodnôť si môžeme všimnúť že sa rozdelenie hodnôt podobá 
+normálnemu rozdeleniu, avšak kvôli malému počtu dát takúto závislost nebudeme 
+testovať. Namiesto toho sa pokúsime odhadnúť 95%-ný interval do ktorého spadá 
+stredná hodnota BMI.
+
+```{r}
+# plot(dnorm(data$bmi, mean=mean(data$bmi), sd=sd(data$bmi)))
+hist(data$bmi)
+plot(ecdf(data$bmi))
+# par(new = TRUE)
+curve(pnorm(x), from = -18.54, to = 18.63, pch=4)
+#curve(pt(x, df = length(data$bmi) - 1), from = -18.54, to = 18.63, pch=4)
+```
+
+```{r message=FALSE, warning=FALSE}
+library(ggpubr)
+ggqqplot(data$bmi)
+```
+
