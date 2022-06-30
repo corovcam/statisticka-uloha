@@ -1,5 +1,13 @@
 # Štatistická úloha
 
+Zdroj dát: https://www.kaggle.com/datasets/mirichoi0218/insurance
+
+GitHub repozitár: https://github.com/corovcam/statisticka-uloha
+
+Budeme skúmať dáta zdravotných výdavkov hradených poisťovňami jednotlivým 
+poistencom v USA vo veku od 18 do 64 rokov získaných z otvorenej databázy
+Kaggle.com.
+
 ## Načítanie dát
 
 ```{r}
@@ -13,12 +21,16 @@ data <- read_csv("insurance_modified.csv",
 head(data)
 ```
 
+
 ## Vizualizácia dát
 
 ```{r}
-par(mfrow = c(1, 4))
+par(mfrow = c(1, 2))
 hist(data$age, main = "Vek")
 hist(data$bmi, main = "BMI")
+```
+```{r message=FALSE, warning=FALSE}
+par(mfrow = c(1, 2))
 hist(data$charges, main = "Výdavky")
 plot(factor(data$smoker), main = "Fajčiary", xlab = "NE-Fajčiar (FALSE-TRUE)",
      ylab = "Frequency")
@@ -28,7 +40,7 @@ plot(factor(data$smoker), main = "Fajčiary", xlab = "NE-Fajčiar (FALSE-TRUE)",
 
 Vytvoríme si korelačný graf využitím externej knižnice "psych". V grafe si 
 vyznačíme korelačné koeficienty využitím Pearsonej metódy, zobrazíme histogramy 
-a funkciu hustoty jednotlivých sĺpcov.
+a funkciu hustoty jednotlivých stĺpcov.
 
 ```{r message=FALSE, warning=FALSE}
 # install.packages("psych")
@@ -52,7 +64,7 @@ pairs.panels(data[-6],
 Budeme testovať potencionálnu koreláciu medzi najpravdepodobnejšími dvojicami 
 hodnôt pomocou lineárnej regresie. Využijeme na to vstavanú funckiu lm().
 
-### Hypotéza 1: Korelácia medzi Vekom a BMI
+### Korelácia medzi Vekom a BMI
 
 ```{r}
 age_bmi_lm = lm(age~bmi, data)
@@ -68,7 +80,7 @@ paste("Korelačný index: r =", cor(data$age, data$bmi))
 Korelačný index je r=0.11 čo je menej ako 0.2, čo znamená že medzi Vekom a BMI 
 je veľmi slabá až žiadna korelácia.
 
-### Hypotéza 2: Korelácia medzi BMI a Výdavkami
+### Korelácia medzi BMI a Výdavkami
 
 ```{r}
 bmi_charges_lm = lm(bmi~charges, data)
@@ -85,7 +97,7 @@ paste("Korelačný index: r =", cor(data$bmi, data$charges))
 Vo výsledku je trochu silnejšia korelácia oproti predošlému vzťahu ale stále 
 nízka.
 
-### Hypotéza 3: Korelácia medzi Vekom a Výdavkami
+### Korelácia medzi Vekom a Výdavkami
 
 ```{r}
 age_charges_lm = lm(age~charges, data)
@@ -105,7 +117,7 @@ teda môžeme zamietnuť a tvrdiť že medzi Vekom a Výdavkami je lineárny vz�
 Taktiež spomedzi všetkých predošlých nameraných r-koeficientov je tento 
 najvyšší, a teda vzťah Vek\~Výdavky je z predošlých vzťahov lineárne najbližší.
 
-### Hypotéza 4: Vzťah medzi skupinami Výdavkov Fajčiarov a Nefajčiariov
+### Vzťah medzi skupinami Výdavkov Fajčiarov a Nefajčiariov
 
 Podľa Korelačného grafu na začiatku, by korelačný index medzi Ne/Fajčiarmi a
 Výdavkami mal byť r=0.79. Poďme teda skúmať túto závislosť.
@@ -131,24 +143,51 @@ text(30000, 175, paste("Fajčiary (počet = ", length(groups$'TRUE'), ")"),
      col = "blue", pos = 1)
 ```
 
-## Intervalové odhady
+Z boxového diagramu naľavo vidíme, že priemerné výdavky nefajčiarov sú oveľa
+menšie ako priemerné výdavky fajčiarov. Z histogramu napravo vidíme že aj keď 
+je nefajčiarov ovela viac, tak výdavky jednotlivcov sú oveľa menšie ako výdavky 
+jednotlivých fajčiarov.
 
-Z histogramu BMI hodnôť si môžeme všimnúť že sa rozdelenie hodnôt podobá 
-normálnemu rozdeleniu, avšak kvôli malému počtu dát takúto závislost nebudeme 
-testovať. Namiesto toho sa pokúsime odhadnúť 95%-ný interval do ktorého spadá 
-stredná hodnota BMI.
+## Normálne rozdelenie BMI
+
+Z histogramu BMI hodnôt si môžeme všimnúť že sa rozdelenie hodnôt podobá 
+normálnemu rozdeleniu (až na určituú deformáciu zprava). Môžeme teda skúmať túto 
+závislosť.
 
 ```{r}
-# plot(dnorm(data$bmi, mean=mean(data$bmi), sd=sd(data$bmi)))
 hist(data$bmi)
-plot(ecdf(data$bmi))
-# par(new = TRUE)
-curve(pnorm(x), from = -18.54, to = 18.63, pch=4)
-#curve(pt(x, df = length(data$bmi) - 1), from = -18.54, to = 18.63, pch=4)
 ```
 
 ```{r message=FALSE, warning=FALSE}
 library(ggpubr)
+ggdensity(data$bmi, main = "Graf hustoty BMI hodnôt", xlab = "BMI", 
+          ylab = "Hustota")
+```
+
+Graf hustoty, podobný histogramu, má vizuálne tvar normálneho rozdelenia, avšak 
+pri pohľade sa zdá že je graf viac naľavo.
+
+```{r message=FALSE, warning=FALSE}
 ggqqplot(data$bmi)
 ```
 
+Hodnoty v Q-Q grafe sa nachádzajú väčšinou pozdĺž referenčnej priamky, avšak 
+hodnoty nízkeho BMI poukazujú na určité anomálie. Nevieme, či sú dané anomálie 
+normálne v populácii alebo sú spôsobené chybou merania. 
+BMI je podiel hmotnosti a výšky človeka na druhú a BMI od 10-18.5 sa 
+považuje za podváhu čo približne odpovedá našej anomálii. Taký človek by musel 
+byť vysoký s malou váhou. Avšak takých hodnôt nie je veľa a pri našom malom 
+počte meraní nevieme presne určiť o čo ide.
+
+### Test normality
+
+Vizuálna inšpekcia BMI poukazuje na normalitu, poďme otestovať túto hypotézu 
+pomocou Shapiro-Wilkovho testu normality.
+
+```{r}
+shapiro.test(data$bmi)
+```
+
+P-hodnota je menšia ako 0.05 hladina významnosti čiže musíme našu nulovú 
+hypotézu zamietnuť. Nemôžeme teda predpokladať normalitu BMI nášho merania s 
+1338 vzorkami.
