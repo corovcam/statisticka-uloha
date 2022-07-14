@@ -85,7 +85,7 @@ funckiu lm().
 ### Korelácia medzi Vekom a BMI
 
 ``` r
-age_bmi_lm = lm(age~bmi, data)
+age_bmi_lm = lm(bmi~age, data)
 plot(data$age, data$bmi, pch = 16, col = "blue", xlab = "Vek", ylab = "BMI")
 abline(age_bmi_lm, col = "red")
 ```
@@ -98,20 +98,20 @@ summary(age_bmi_lm)
 
     ## 
     ## Call:
-    ## lm(formula = age ~ bmi, data = data)
+    ## lm(formula = bmi ~ age, data = data)
     ## 
     ## Residuals:
-    ##      Min       1Q   Median       3Q      Max 
-    ## -26.8632 -12.5477   0.3053  11.6915  26.7248 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -13.791  -4.359  -0.240   4.127  23.472 
     ## 
     ## Coefficients:
     ##             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept) 31.48728    1.95884  16.074  < 2e-16 ***
-    ## bmi          0.25176    0.06266   4.018 6.19e-05 ***
+    ## (Intercept) 28.80389    0.49158  58.595  < 2e-16 ***
+    ## age          0.04743    0.01180   4.018 6.19e-05 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 13.97 on 1336 degrees of freedom
+    ## Residual standard error: 6.064 on 1336 degrees of freedom
     ## Multiple R-squared:  0.01194,    Adjusted R-squared:  0.0112 
     ## F-statistic: 16.15 on 1 and 1336 DF,  p-value: 6.194e-05
 
@@ -127,7 +127,7 @@ a BMI je veľmi slabá až žiadna korelácia.
 ### Korelácia medzi BMI a Výdavkami
 
 ``` r
-bmi_charges_lm = lm(bmi~charges, data)
+bmi_charges_lm = lm(charges~bmi, data)
 plot(data$bmi, data$charges, pch = 16, col = "blue", xlab = "BMI", 
      ylab = "Výdavky")
 abline(bmi_charges_lm, col = "red")
@@ -141,20 +141,20 @@ summary(bmi_charges_lm)
 
     ## 
     ## Call:
-    ## lm(formula = bmi ~ charges, data = data)
+    ## lm(formula = charges ~ bmi, data = data)
     ## 
     ## Residuals:
-    ##      Min       1Q   Median       3Q      Max 
-    ## -14.8424  -4.1030  -0.2401   3.8467  23.6758 
+    ##    Min     1Q Median     3Q    Max 
+    ## -20956  -8118  -3757   4722  49442 
     ## 
     ## Coefficients:
-    ##              Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept) 2.934e+01  2.426e-01 120.956  < 2e-16 ***
-    ## charges     9.988e-05  1.350e-05   7.397 2.46e-13 ***
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)  1192.94    1664.80   0.717    0.474    
+    ## bmi           393.87      53.25   7.397 2.46e-13 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 5.979 on 1336 degrees of freedom
+    ## Residual standard error: 11870 on 1336 degrees of freedom
     ## Multiple R-squared:  0.03934,    Adjusted R-squared:  0.03862 
     ## F-statistic: 54.71 on 1 and 1336 DF,  p-value: 2.459e-13
 
@@ -170,7 +170,7 @@ stále nízka.
 ### Korelácia medzi Vekom a Výdavkami
 
 ``` r
-age_charges_lm = lm(age~charges, data)
+age_charges_lm = lm(charges~age, data)
 plot(data$age, data$charges, pch = 16, col = "blue", xlab = "Vek", 
      ylab = "Výdavky")
 abline(age_charges_lm, col = "red")
@@ -184,20 +184,20 @@ summary(age_charges_lm)
 
     ## 
     ## Call:
-    ## lm(formula = age ~ charges, data = data)
+    ## lm(formula = charges ~ age, data = data)
     ## 
     ## Residuals:
-    ##      Min       1Q   Median       3Q      Max 
-    ## -30.0609 -11.4222   0.1691  11.1759  24.6013 
+    ##    Min     1Q Median     3Q    Max 
+    ##  -8059  -6671  -5939   5440  47829 
     ## 
     ## Coefficients:
-    ##              Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept) 3.460e+01  5.441e-01   63.60   <2e-16 ***
-    ## charges     3.469e-04  3.029e-05   11.45   <2e-16 ***
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)   3165.9      937.1   3.378 0.000751 ***
+    ## age            257.7       22.5  11.453  < 2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 13.41 on 1336 degrees of freedom
+    ## Residual standard error: 11560 on 1336 degrees of freedom
     ## Multiple R-squared:  0.08941,    Adjusted R-squared:  0.08872 
     ## F-statistic: 131.2 on 1 and 1336 DF,  p-value: < 2.2e-16
 
@@ -222,10 +222,8 @@ závislosť.
 
 ``` r
 par(mfrow = c(1, 2))
-smoker_charges_lm = lm(smoker~charges, data)
 plot(factor(data$smoker), data$charges, pch = 16, col = "blue", xlab = "Fajčiar", 
      ylab = "Výdavky")
-abline(smoker_charges_lm, col = "red")
 
 groups = split(data$charges, data$smoker)
 hist(groups$'TRUE', col = "blue", xlab = "Výdavky", 
