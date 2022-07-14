@@ -67,7 +67,7 @@ hodnôt pomocou lineárnej regresie. Využijeme na to vstavanú funckiu lm().
 ### Korelácia medzi Vekom a BMI
 
 ```{r}
-age_bmi_lm = lm(age~bmi, data)
+age_bmi_lm = lm(bmi~age, data)
 plot(data$age, data$bmi, pch = 16, col = "blue", xlab = "Vek", ylab = "BMI")
 abline(age_bmi_lm, col = "red")
 ```
@@ -83,7 +83,7 @@ je veľmi slabá až žiadna korelácia.
 ### Korelácia medzi BMI a Výdavkami
 
 ```{r}
-bmi_charges_lm = lm(bmi~charges, data)
+bmi_charges_lm = lm(charges~bmi, data)
 plot(data$bmi, data$charges, pch = 16, col = "blue", xlab = "BMI", 
      ylab = "Výdavky")
 abline(bmi_charges_lm, col = "red")
@@ -100,7 +100,7 @@ nízka.
 ### Korelácia medzi Vekom a Výdavkami
 
 ```{r}
-age_charges_lm = lm(age~charges, data)
+age_charges_lm = lm(charges~age, data)
 plot(data$age, data$charges, pch = 16, col = "blue", xlab = "Vek", 
      ylab = "Výdavky")
 abline(age_charges_lm, col = "red")
@@ -124,10 +124,8 @@ Výdavkami mal byť r=0.79. Poďme teda skúmať túto závislosť.
 
 ```{r}
 par(mfrow = c(1, 2))
-smoker_charges_lm = lm(smoker~charges, data)
 plot(factor(data$smoker), data$charges, pch = 16, col = "blue", xlab = "Fajčiar", 
      ylab = "Výdavky")
-abline(smoker_charges_lm, col = "red")
 
 groups = split(data$charges, data$smoker)
 hist(groups$'TRUE', col = "blue", xlab = "Výdavky", 
